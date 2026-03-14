@@ -1,5 +1,10 @@
-import { View, Text, ScrollView, TouchableOpacity } from "react-native";
-import { useRouter } from "expo-router";
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  RefreshControl,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../../src/context/AuthContext";
 import { useState, useEffect, useRef } from "react";
@@ -14,11 +19,13 @@ import {
 import { homeStyles } from "../../src/styles/homeStyles";
 import MediaRow from "../../src/components/MediaRow";
 import SkeletonRow from "../../src/components/SkeletonRow";
+import { useRouter } from "expo-router";
 
 export default function Home() {
-  const { logout } = useAuth();
   const router = useRouter();
+  const { logout } = useAuth();
   const hasFetched = useRef(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [movies, setMovies] = useState({
     popular: [],
     nowPlaying: [],
@@ -72,6 +79,11 @@ export default function Home() {
       setLoadingTv(false);
     }
   };
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await Promise.all([fetchMovies(), fetchTv()]);
+    setRefreshing(false);
+  };
 
   // useEffect with [] means "run once when the screen first loads"
   // same as @PostConstruct in Java
@@ -88,17 +100,15 @@ export default function Home() {
         style={homeStyles.container}
         contentContainerStyle={homeStyles.scrollContent}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="#E50914"
+            colors={["#E50914"]}
+          />
+        }
       >
-        {/* Search bar */}
-        <TouchableOpacity
-          style={homeStyles.searchContainer}
-          onPress={() => router.push("/search")}
-          activeOpacity={0.7}
-        >
-          <Text style={homeStyles.searchIcon}>🔍</Text>
-          <Text style={homeStyles.searchText}>Search movies & TV shows...</Text>
-        </TouchableOpacity>
-
         {/* Error message */}
         {error && (
           <View style={homeStyles.errorContainer}>
@@ -120,9 +130,21 @@ export default function Home() {
           </>
         ) : (
           <>
-            <MediaRow label="Popular" data={movies.popular} />
-            <MediaRow label="Now Playing" data={movies.nowPlaying} />
-            <MediaRow label="Upcoming" data={movies.upcoming} />
+            <MediaRow
+              label="Popular"
+              data={movies.popular}
+              onSeeMore={() => router.push("/category/movie-popular")}
+            />
+            <MediaRow
+              label="Now Playing"
+              data={movies.nowPlaying}
+              onSeeMore={() => router.push("/category/movie-now-playing")}
+            />
+            <MediaRow
+              label="Upcoming"
+              data={movies.upcoming}
+              onSeeMore={() => router.push("/category/movie-upcoming")}
+            />
           </>
         )}
 
@@ -140,9 +162,21 @@ export default function Home() {
           </>
         ) : (
           <>
-            <MediaRow label="Popular" data={tv.popularTv} />
-            <MediaRow label="Top Rated" data={tv.topRatedTv} />
-            <MediaRow label="On The Air" data={tv.onTheAirTv} />
+            <MediaRow
+              label="Popular"
+              data={tv.popularTv}
+              onSeeMore={() => router.push("/category/tv-popular")}
+            />
+            <MediaRow
+              label="Top Rated"
+              data={tv.topRatedTv}
+              onSeeMore={() => router.push("/category/tv-top-rated")}
+            />
+            <MediaRow
+              label="On The Air"
+              data={tv.onTheAirTv}
+              onSeeMore={() => router.push("/category/tv-on-the-air")}
+            />
           </>
         )}
       </ScrollView>

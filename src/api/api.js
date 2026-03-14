@@ -36,3 +36,6 @@ export const discover = async (type = null, genres = null, page = 1) =>
   apiClient.get(
     `/api/search/discover?page=${page}${type ? `&type=${type}` : ""}${genres ? `&genres=${genres}` : ""}`,
   );
+
+export const getMovieDetails = async (id) => apiClient.get(`api/movie/${id}`);
+export const getTvDetails = async (id) => apiClient.get(`/api/tv/${id}`);

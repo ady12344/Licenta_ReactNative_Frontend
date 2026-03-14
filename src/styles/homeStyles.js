@@ -86,21 +86,23 @@ export const cardStyles = StyleSheet.create({
 });
 
 export const rowStyles = StyleSheet.create({
-  container: {
-    marginBottom: 24,
+  container: { marginBottom: 24 },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    marginBottom: 10,
   },
   label: {
     color: "#9ca3af",
     fontSize: 13,
     fontWeight: "600",
-    paddingHorizontal: 16,
-    marginBottom: 10,
     textTransform: "uppercase",
     letterSpacing: 0.8,
   },
-  list: {
-    paddingHorizontal: 16,
-  },
+  seeMore: { color: "#E50914", fontSize: 12, fontWeight: "600" },
+  list: { paddingHorizontal: 16 },
 });
 
 export const skeletonStyles = StyleSheet.create({

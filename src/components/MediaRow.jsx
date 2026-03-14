@@ -1,14 +1,20 @@
-import { View, Text, FlatList } from "react-native";
+import { View, Text, FlatList, TouchableOpacity } from "react-native";
 import MediaCard from "./MediaCard";
 import { rowStyles } from "../styles/homeStyles";
 
-export default function MediaRow({ label, data }) {
-  // 1. If data is empty or null, return null (don't render anything)
-  if (!data) return null;
+export default function MediaRow({ label, data, onSeeMore }) {
+  if (!data || data.length === 0) return null;
 
   return (
     <View style={rowStyles.container}>
-      <Text style={rowStyles.label}>{label}</Text>
+      <View style={rowStyles.header}>
+        <Text style={rowStyles.label}>{label}</Text>
+        {onSeeMore && (
+          <TouchableOpacity onPress={onSeeMore}>
+            <Text style={rowStyles.seeMore}>See More</Text>
+          </TouchableOpacity>
+        )}
+      </View>
       <FlatList
         data={data}
         keyExtractor={(item) => item.tmdbId.toString()}

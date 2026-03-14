@@ -1,11 +1,18 @@
-import { TouchableOpacity, Text, View, StyleSheet } from "react-native";
+import {
+  TouchableOpacity,
+  Text,
+  View,
+  StyleSheet,
+  Dimensions,
+} from "react-native";
+import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { memo } from "react";
-import { Image } from "expo-image";
-import { cardStyles } from "../styles/homeStyles";
+import { CARD_WIDTH } from "../styles/homeStyles";
+
 const SearchMediaCard = memo(({ item }) => {
   const router = useRouter();
-
+  const CARD_WIDTH = (Dimensions.get("window").width - 24) / 3;
   const handlePress = () => {
     if (item.mediaType === "MOVIE") router.push(`/movie/${item.tmdbId}`);
     else router.push(`/tv/${item.tmdbId}`);
@@ -19,10 +26,10 @@ const SearchMediaCard = memo(({ item }) => {
     >
       <Image
         source={item.posterPath ? { uri: item.posterPath } : null}
-        style={cardStyles.poster}
-        contentFit="cover" // expo-image uses contentFit instead of resizeMode
-        transition={200} // smooth fade in when image loads
-        cachePolicy="memory-disk" // cache in memory AND on disk
+        style={styles.poster}
+        contentFit="cover"
+        transition={200}
+        cachePolicy="memory-disk"
       />
       <View style={styles.badge}>
         <Text style={styles.badgeText}>
@@ -40,7 +47,7 @@ export default SearchMediaCard;
 
 const styles = StyleSheet.create({
   card: {
-    flex: 1,
+    width: CARD_WIDTH,
     margin: 4,
   },
   poster: {
@@ -67,5 +74,7 @@ const styles = StyleSheet.create({
     color: "#ccc",
     fontSize: 11,
     marginTop: 6,
+    marginBottom: 4,
+    height: 28,
   },
 });

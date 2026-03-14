@@ -7,7 +7,7 @@ import {
   ActivityIndicator,
   ScrollView,
 } from "react-native";
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { search, discover } from "../../src/api/api";
 import { searchStyles } from "../../src/styles/homeStyles";
@@ -32,6 +32,8 @@ const FILTERS = [
   { key: "tv", label: "TV Shows" },
 ];
 
+const renderItem = ({ item }) => <SearchMediaCard item={item} />;
+
 export default function Search() {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("ALL");
@@ -45,55 +47,67 @@ export default function Search() {
   const [focused, setFocused] = useState(false);
 
   const inputRef = useRef(null);
+  const searchIdRef = useRef(0);
+  const isLoadingMoreRef = useRef(false);
 
-  const genresString = useMemo(
-    () => (selectedGenres.length > 0 ? selectedGenres.join(",") : null),
-    [selectedGenres],
-  );
+  const handleSearch = async (q, type, genres) => {
+    const currentId = ++searchIdRef.current;
 
-  const typeParam = filter === "ALL" ? null : filter;
-
-  const handleSearch = async () => {
     setResults([]);
     setPage(1);
     setLoading(true);
     setError(null);
+    isLoadingMoreRef.current = false;
 
     try {
-      if (query) {
-        const { data } = await search(query, typeParam, 1);
-        setResults(data.results);
-        setTotalPages(data.totalPages);
+      let data;
+      if (q) {
+        const res = await search(q, type, 1);
+        data = res.data;
       } else {
-        const { data } = await discover(typeParam, genresString, 1);
-        setResults(data.results);
-        setTotalPages(data.totalPages);
+        const res = await discover(type, genres, 1);
+        data = res.data;
       }
+
+      if (currentId !== searchIdRef.current) return;
+      setResults(data.results);
+      setTotalPages(data.totalPages);
     } catch (e) {
+      if (currentId !== searchIdRef.current) return;
       console.log("Search error:", e);
       setError("Failed to load results.");
     } finally {
+      if (currentId !== searchIdRef.current) return;
       setLoading(false);
     }
   };
 
   const loadMore = async () => {
-    if (loadingMore || page >= totalPages) return;
+    if (isLoadingMoreRef.current) return;
+    if (loadingMore) return;
+    if (page >= totalPages) return;
+    if (results.length === 0) return;
+
+    isLoadingMoreRef.current = true;
     setLoadingMore(true);
 
+    const type = filter === "ALL" ? null : filter;
+    const genres = selectedGenres.length > 0 ? selectedGenres.join(",") : null;
+    const nextPage = page + 1;
+
     try {
-      const nextPage = page + 1;
       if (query) {
-        const { data } = await search(query, typeParam, nextPage);
+        const { data } = await search(query, type, nextPage);
         setResults((prev) => [...prev, ...data.results]);
       } else {
-        const { data } = await discover(typeParam, genresString, nextPage);
+        const { data } = await discover(type, genres, nextPage);
         setResults((prev) => [...prev, ...data.results]);
       }
       setPage(nextPage);
     } catch (e) {
       console.log("Load more error:", e);
     } finally {
+      isLoadingMoreRef.current = false;
       setLoadingMore(false);
     }
   };
@@ -106,16 +120,19 @@ export default function Search() {
     );
   };
 
-  // re-search when filter changes immediately
   useEffect(() => {
-    handleSearch();
+    const type = filter === "ALL" ? null : filter;
+    const genres = selectedGenres.length > 0 ? selectedGenres.join(",") : null;
+    handleSearch(query, type, genres);
   }, [filter, selectedGenres]);
 
-  // debounce only for query changes
   useEffect(() => {
     const timer = setTimeout(() => {
-      handleSearch();
-    }, 500);
+      const type = filter === "ALL" ? null : filter;
+      const genres =
+        selectedGenres.length > 0 ? selectedGenres.join(",") : null;
+      handleSearch(query, type, genres);
+    }, 400);
     return () => clearTimeout(timer);
   }, [query]);
 
@@ -157,7 +174,10 @@ export default function Search() {
         <TextInput
           ref={inputRef}
           value={query}
-          onChangeText={setQuery}
+          onChangeText={(text) => {
+            if (text) setSelectedGenres([]);
+            setQuery(text);
+          }}
           placeholder="Search movies & TV shows..."
           placeholderTextColor="#555"
           style={searchStyles.searchInput}
@@ -199,34 +219,37 @@ export default function Search() {
         ))}
       </View>
 
-      {/* Genre chips */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={searchStyles.genreContainer}
-        style={{ height: 44 }}
-      >
-        {GENRES.map((genre) => (
-          <TouchableOpacity
-            key={genre.id}
-            onPress={() => toggleGenre(genre.id)}
-            style={[
-              searchStyles.genreChip,
-              selectedGenres.includes(genre.id) && searchStyles.genreChipActive,
-            ]}
-          >
-            <Text
+      {/* Genre chips — only when no query */}
+      {!query && (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={searchStyles.genreContainer}
+          style={{ height: 44 }}
+        >
+          {GENRES.map((genre) => (
+            <TouchableOpacity
+              key={genre.id}
+              onPress={() => toggleGenre(genre.id)}
               style={[
-                searchStyles.genreText,
+                searchStyles.genreChip,
                 selectedGenres.includes(genre.id) &&
-                  searchStyles.genreTextActive,
+                  searchStyles.genreChipActive,
               ]}
             >
-              {genre.name}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+              <Text
+                style={[
+                  searchStyles.genreText,
+                  selectedGenres.includes(genre.id) &&
+                    searchStyles.genreTextActive,
+                ]}
+              >
+                {genre.name}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      )}
 
       {/* Error */}
       {error && (
@@ -242,13 +265,16 @@ export default function Search() {
         </View>
       ) : (
         <FlatList
+          key={query}
           data={results}
-          keyExtractor={(item) => `${item.mediaType}-${item.tmdbId}`}
-          renderItem={({ item }) => <SearchMediaCard item={item} />}
+          keyExtractor={(item, index) =>
+            `${item.mediaType}-${item.tmdbId}-${index}`
+          }
+          renderItem={renderItem}
           numColumns={3}
           contentContainerStyle={searchStyles.gridContent}
-          onEndReached={loadMore}
-          onEndReachedThreshold={0.5}
+          onEndReached={loadingMore ? null : loadMore}
+          onEndReachedThreshold={0.1}
           ListEmptyComponent={renderEmpty}
           ListFooterComponent={renderFooter}
           removeClippedSubviews={true}

@@ -1,4 +1,5 @@
 import { Tabs } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function TabLayout() {
   return (
@@ -9,10 +10,35 @@ export default function TabLayout() {
         tabBarActiveTintColor: "#E50914",
         tabBarInactiveTintColor: "#555",
       }}
+      sceneContainerStyle={{ backgroundColor: "#0f0f0f" }}
     >
-      <Tabs.Screen name="index" options={{ title: "Home" }} />
-      <Tabs.Screen name="search" options={{ title: "Search" }} />
-      <Tabs.Screen name="library" options={{ title: "Library" }} />
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: "Home",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="home" color={color} size={size} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="search"
+        options={{
+          title: "Search",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="search" color={color} size={size} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="library"
+        options={{
+          title: "Library",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="bookmark" color={color} size={size} />
+          ),
+        }}
+      />
     </Tabs>
   );
 }
