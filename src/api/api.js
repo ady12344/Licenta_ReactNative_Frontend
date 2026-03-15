@@ -37,5 +37,31 @@ export const discover = async (type = null, genres = null, page = 1) =>
     `/api/search/discover?page=${page}${type ? `&type=${type}` : ""}${genres ? `&genres=${genres}` : ""}`,
   );
 
-export const getMovieDetails = async (id) => apiClient.get(`api/movie/${id}`);
+export const getMovieDetails = async (id) => apiClient.get(`/api/movie/${id}`);
 export const getTvDetails = async (id) => apiClient.get(`/api/tv/${id}`);
+
+// Reviews
+export const getReviews = async (tmdbId, mediaType, page = 1) =>
+  apiClient.get(
+    `/api/reviews?tmdbId=${tmdbId}&mediaType=${mediaType}&page=${page}`,
+  );
+export const getReviewSummary = async (tmdbId, mediaType) =>
+  apiClient.get(`/api/reviews/summary?tmdbId=${tmdbId}&mediaType=${mediaType}`);
+export const getUserReview = async (tmdbId, mediaType) =>
+  apiClient.get(`/api/reviews/user?tmdbId=${tmdbId}&mediaType=${mediaType}`);
+export const addReview = async (tmdbId, mediaType, liked, content) =>
+  apiClient.post("/api/reviews", {
+    tmdbId: tmdbId,
+    mediaType: mediaType,
+    liked: liked,
+    content: content,
+  });
+export const editReview = async (tmdbId, mediaType, liked, content) =>
+  apiClient.put(`/api/reviews/edit`, {
+    tmdbId: tmdbId,
+    mediaType: mediaType,
+    liked: liked,
+    content: content,
+  });
+export const deleteReview = async (tmdbId, mediaType) =>
+  apiClient.delete(`/api/reviews?tmdbId=${tmdbId}&mediaType=${mediaType}`);

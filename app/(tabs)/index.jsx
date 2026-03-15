@@ -96,6 +96,18 @@ export default function Home() {
 
   return (
     <SafeAreaView style={homeStyles.safeArea}>
+      <TouchableOpacity
+        onPress={logout}
+        style={{
+          padding: 16,
+          backgroundColor: "#E50914",
+          margin: 16,
+          borderRadius: 8,
+        }}
+      >
+        <Text style={{ color: "white", textAlign: "center" }}>Logout</Text>
+      </TouchableOpacity>
+
       <ScrollView
         style={homeStyles.container}
         contentContainerStyle={homeStyles.scrollContent}
