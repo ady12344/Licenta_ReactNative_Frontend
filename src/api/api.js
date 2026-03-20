@@ -65,3 +65,19 @@ export const editReview = async (tmdbId, mediaType, liked, content) =>
   });
 export const deleteReview = async (tmdbId, mediaType) =>
   apiClient.delete(`/api/reviews?tmdbId=${tmdbId}&mediaType=${mediaType}`);
+
+export const getLibrary = async (type = null, page = 1, size = 10) =>
+  apiClient.get(
+    `/api/library?page=${page}&size=${size}${type ? `&type=${type}` : ""}`,
+  );
+
+export const addToLibrary = async (tmdbId, mediaType, title, posterPath) =>
+  apiClient.post("/api/library/add", { tmdbId, mediaType, title, posterPath });
+
+export const removeFromLibrary = async (tmdbId, mediaType) =>
+  apiClient.delete(
+    `/api/library/remove?tmdbId=${tmdbId}&mediaType=${mediaType}`,
+  );
+
+export const checkLibrary = async (tmdbId, mediaType) =>
+  apiClient.get(`/api/library/check?tmdbId=${tmdbId}&mediaType=${mediaType}`);

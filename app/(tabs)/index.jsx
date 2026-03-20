@@ -48,10 +48,11 @@ export default function Home() {
         getUpcomingMovies(),
       ]);
       setMovies({
-        popular: popular.data.results, // .content to get the array
+        popular: popular.data.results,
         nowPlaying: nowPlaying.data.results,
         upcoming: upcoming.data.results,
       });
+      setErrors(null); // clear error on success
     } catch (e) {
       console.log("Error fetching movies:", e);
       setErrors("Failed to load content. Pull down to refresh.");
@@ -62,16 +63,17 @@ export default function Home() {
 
   const fetchTv = async () => {
     try {
-      const [popularShows, onTheAir, topRated] = await Promise.all([
+      const [popular, onTheAir, topRated] = await Promise.all([
         getPopularTv(),
         getOnTheAirTv(),
         getTopRatedTv(),
       ]);
       setTv({
-        popularTv: popularShows.data.results,
+        popularTv: popular.data.results,
         onTheAirTv: onTheAir.data.results,
         topRatedTv: topRated.data.results,
       });
+      setErrors(null); // clear error on success
     } catch (e) {
       console.log("Error fetching tv shows:", e);
       setErrors("Failed to load content. Pull down to refresh.");
@@ -81,6 +83,9 @@ export default function Home() {
   };
   const onRefresh = async () => {
     setRefreshing(true);
+    setErrors(null); // clear error immediately
+    setLoadingMovies(true); // show skeletons while refreshing
+    setLoadingTv(true);
     await Promise.all([fetchMovies(), fetchTv()]);
     setRefreshing(false);
   };

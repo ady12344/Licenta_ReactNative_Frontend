@@ -4,40 +4,29 @@ import {
   FlatList,
   ActivityIndicator,
   TouchableOpacity,
-  StyleSheet,
   Animated,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState, useEffect, useRef } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import {
-  getPopularMovies,
-  getNowPlayingMovies,
-  getUpcomingMovies,
-  getPopularTv,
-  getTopRatedTv,
-  getOnTheAirTv,
-} from "../../src/api/api";
+import { getLibrary } from "../../src/api/api";
 import SearchMediaCard from "../../src/components/SearchMediaCard";
+import { libraryStyles as styles } from "../../src/styles/libraryStyles";
 
-const CATEGORY_CONFIG = {
-  "movie-popular": { label: "Popular Movies", fetch: getPopularMovies },
-  "movie-now-playing": { label: "Now Playing", fetch: getNowPlayingMovies },
-  "movie-upcoming": { label: "Upcoming Movies", fetch: getUpcomingMovies },
-  "tv-popular": { label: "Popular TV Shows", fetch: getPopularTv },
-  "tv-top-rated": { label: "Top Rated TV Shows", fetch: getTopRatedTv },
-  "tv-on-the-air": { label: "On The Air", fetch: getOnTheAirTv },
+const TYPE_CONFIG = {
+  MOVIE: { label: "My Movies" },
+  TV: { label: "My TV Shows" },
 };
 
 const renderItem = ({ item }) => <SearchMediaCard item={item} />;
 
-export default function CategoryScreen() {
+export default function LibraryType() {
   const { type } = useLocalSearchParams();
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
-  const config = CATEGORY_CONFIG[type];
+  const config = TYPE_CONFIG[type];
 
   const [results, setResults] = useState([]);
   const [page, setPage] = useState(1);
@@ -59,12 +48,13 @@ export default function CategoryScreen() {
   }, []);
 
   const loadInitial = async () => {
+    setLoading(true);
     try {
-      const { data } = await config.fetch(1);
+      const { data } = await getLibrary(type, 1, 20);
       setResults(data.results);
       setTotalPages(data.totalPages);
     } catch (e) {
-      console.log("Category load error:", e);
+      console.log("Error loading library:", e);
     } finally {
       setLoading(false);
     }
@@ -76,7 +66,7 @@ export default function CategoryScreen() {
     setLoadingMore(true);
     try {
       const nextPage = page + 1;
-      const { data } = await config.fetch(nextPage);
+      const { data } = await getLibrary(type, nextPage, 20);
       setResults((prev) => [...prev, ...data.results]);
       setPage(nextPage);
     } catch (e) {
@@ -98,8 +88,16 @@ export default function CategoryScreen() {
 
   if (!config) {
     return (
-      <View style={styles.container}>
-        <Text style={styles.errorText}>Category not found</Text>
+      <View style={styles.loadingContainer}>
+        <Text style={{ color: "white" }}>Invalid type</Text>
+      </View>
+    );
+  }
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator color="#E50914" size="large" />
       </View>
     );
   }
@@ -123,80 +121,29 @@ export default function CategoryScreen() {
 
       {/* Header title */}
       <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
-        <Text style={styles.title}>{config.label}</Text>
+        <Text style={styles.headerTitle}>{config.label}</Text>
       </View>
 
-      {/* Loading */}
-      {loading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator color="#E50914" size="large" />
-        </View>
-      ) : (
-        <FlatList
-          data={results}
-          keyExtractor={(item) => `${item.mediaType}-${item.tmdbId}`}
-          renderItem={renderItem}
-          numColumns={3}
-          contentContainerStyle={styles.gridContent}
-          onEndReached={loadingMore ? null : loadMore}
-          onEndReachedThreshold={0.1}
-          ListFooterComponent={renderFooter}
-          removeClippedSubviews={true}
-          maxToRenderPerBatch={12}
-          windowSize={5}
-          initialNumToRender={12}
-        />
-      )}
+      {/* Results */}
+      <FlatList
+        data={results}
+        keyExtractor={(item) => `${item.mediaType}-${item.tmdbId}`}
+        renderItem={renderItem}
+        numColumns={3}
+        contentContainerStyle={styles.gridContent}
+        onEndReached={loadingMore ? null : loadMore}
+        onEndReachedThreshold={0.1}
+        ListFooterComponent={renderFooter}
+        removeClippedSubviews={true}
+        maxToRenderPerBatch={12}
+        windowSize={5}
+        initialNumToRender={12}
+        ListEmptyComponent={() => (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>No items found</Text>
+          </View>
+        )}
+      />
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#0f0f0f",
-  },
-  header: {
-    alignItems: "center",
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "rgba(255,255,255,0.08)",
-  },
-  backButton: {
-    position: "absolute",
-    left: 16,
-    zIndex: 10,
-    width: 40,
-    height: 40,
-  },
-  backButtonInner: {
-    width: "100%",
-    height: "100%",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  title: {
-    color: "white",
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-  loadingContainer: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  gridContent: {
-    paddingHorizontal: 12,
-    paddingBottom: 32,
-    paddingTop: 12,
-  },
-  footerLoader: {
-    paddingVertical: 20,
-    alignItems: "center",
-  },
-  errorText: {
-    color: "white",
-    textAlign: "center",
-    marginTop: 40,
-  },
-});

@@ -22,6 +22,9 @@ import {
   addReview,
   editReview,
   deleteReview,
+  addToLibrary,
+  removeFromLibrary,
+  checkLibrary,
 } from "../../src/api/api";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
@@ -55,200 +58,219 @@ const SENTIMENT_CONFIG = {
 };
 
 // ── Static content ─────────────────────────────────────────────────────────────
-const TvStaticContent = memo(({ show, summary }) => (
-  <View>
-    <View style={styles.backdropContainer}>
-      {show.backdropPath ? (
-        <Image
-          source={{ uri: show.backdropPath }}
-          style={styles.backdrop}
-          contentFit="cover"
-          transition={300}
-          cachePolicy="memory-disk"
+const TvStaticContent = memo(
+  ({ show, summary, inLibrary, onToggleLibrary }) => (
+    <View>
+      <View style={styles.backdropContainer}>
+        {show.backdropPath ? (
+          <Image
+            source={{ uri: show.backdropPath }}
+            style={styles.backdrop}
+            contentFit="cover"
+            transition={300}
+            cachePolicy="memory-disk"
+          />
+        ) : (
+          <View style={styles.backdropPlaceholder}>
+            <Ionicons name="tv-outline" size={48} color="#333" />
+          </View>
+        )}
+        <LinearGradient
+          colors={["transparent", "rgba(15,15,15,0.8)", "#0f0f0f"]}
+          style={styles.backdropGradient}
         />
-      ) : (
-        <View style={styles.backdropPlaceholder}>
-          <Ionicons name="tv-outline" size={48} color="#333" />
-        </View>
-      )}
-      <LinearGradient
-        colors={["transparent", "rgba(15,15,15,0.8)", "#0f0f0f"]}
-        style={styles.backdropGradient}
-      />
-    </View>
+      </View>
 
-    <View style={styles.infoRow}>
-      {show.posterPath ? (
-        <Image
-          source={{ uri: show.posterPath }}
-          style={styles.poster}
-          contentFit="cover"
-          transition={300}
-          cachePolicy="memory-disk"
-        />
-      ) : (
-        <View style={styles.posterPlaceholder}>
-          <Ionicons name="tv-outline" size={36} color="#333" />
-        </View>
-      )}
-      <View style={styles.infoText}>
-        <Text style={styles.title}>{show.title}</Text>
-        {show.firstAirDate && (
-          <View style={styles.metaRow}>
-            <Ionicons name="calendar-outline" size={13} color="#9ca3af" />
-            <Text style={styles.meta}>
-              {" "}
-              {show.firstAirDate.substring(0, 4)}
-            </Text>
+      <View style={styles.infoRow}>
+        {show.posterPath ? (
+          <Image
+            source={{ uri: show.posterPath }}
+            style={styles.poster}
+            contentFit="cover"
+            transition={300}
+            cachePolicy="memory-disk"
+          />
+        ) : (
+          <View style={styles.posterPlaceholder}>
+            <Ionicons name="tv-outline" size={36} color="#333" />
           </View>
         )}
-        {show.tmdbRating && (
-          <View style={styles.metaRow}>
-            <Ionicons name="star" size={13} color="#fbbf24" />
-            <Text style={styles.rating}> {show.tmdbRating.toFixed(1)}</Text>
+        <View style={styles.infoText}>
+          {/* Title + bookmark */}
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "flex-start",
+            }}
+          >
+            <Text style={[styles.title, { flex: 1 }]}>{show.title}</Text>
+            <TouchableOpacity onPress={onToggleLibrary} style={{ padding: 4 }}>
+              <Ionicons
+                name={inLibrary ? "bookmark" : "bookmark-outline"}
+                size={24}
+                color={inLibrary ? "#E50914" : "#9ca3af"}
+              />
+            </TouchableOpacity>
           </View>
-        )}
-        {show.numberOfSeasons && (
-          <View style={styles.metaRow}>
-            <Ionicons name="layers-outline" size={13} color="#9ca3af" />
-            <Text style={styles.meta}>
-              {" "}
-              {show.numberOfSeasons}{" "}
-              {show.numberOfSeasons === 1 ? "Season" : "Seasons"}
-            </Text>
-          </View>
-        )}
-        {summary ? (
-          summary.sentiment ? (
+
+          {show.firstAirDate && (
+            <View style={styles.metaRow}>
+              <Ionicons name="calendar-outline" size={13} color="#9ca3af" />
+              <Text style={styles.meta}>
+                {" "}
+                {show.firstAirDate.substring(0, 4)}
+              </Text>
+            </View>
+          )}
+          {show.tmdbRating && (
+            <View style={styles.metaRow}>
+              <Ionicons name="star" size={13} color="#fbbf24" />
+              <Text style={styles.rating}> {show.tmdbRating.toFixed(1)}</Text>
+            </View>
+          )}
+          {show.numberOfSeasons && (
+            <View style={styles.metaRow}>
+              <Ionicons name="layers-outline" size={13} color="#9ca3af" />
+              <Text style={styles.meta}>
+                {" "}
+                {show.numberOfSeasons}{" "}
+                {show.numberOfSeasons === 1 ? "Season" : "Seasons"}
+              </Text>
+            </View>
+          )}
+          {summary ? (
+            summary.sentiment ? (
+              <View style={styles.metaRow}>
+                <Ionicons
+                  name={SENTIMENT_CONFIG[summary.sentiment].icon}
+                  size={13}
+                  color={SENTIMENT_CONFIG[summary.sentiment].color}
+                />
+                <Text
+                  style={[
+                    styles.meta,
+                    { color: SENTIMENT_CONFIG[summary.sentiment].color },
+                  ]}
+                >
+                  {" "}
+                  {SENTIMENT_CONFIG[summary.sentiment].label}
+                </Text>
+              </View>
+            ) : (
+              <View style={styles.metaRow}>
+                <Ionicons name="chatbubble-outline" size={13} color="#555" />
+                <Text style={[styles.meta, { color: "#555" }]}>
+                  {" "}
+                  No reviews yet
+                </Text>
+              </View>
+            )
+          ) : null}
+          {show.status && (
             <View style={styles.metaRow}>
               <Ionicons
-                name={SENTIMENT_CONFIG[summary.sentiment].icon}
+                name="information-circle-outline"
                 size={13}
-                color={SENTIMENT_CONFIG[summary.sentiment].color}
+                color="#9ca3af"
               />
-              <Text
-                style={[
-                  styles.meta,
-                  { color: SENTIMENT_CONFIG[summary.sentiment].color },
-                ]}
-              >
-                {" "}
-                {SENTIMENT_CONFIG[summary.sentiment].label}
+              <Text style={styles.status}> {show.status}</Text>
+            </View>
+          )}
+        </View>
+      </View>
+
+      <View style={styles.content}>
+        {show.genres && show.genres.length > 0 && (
+          <View style={styles.genreRow}>
+            {show.genres.map((genre, index) => (
+              <View key={index} style={styles.genreChip}>
+                <Text style={styles.genreText}>{genre}</Text>
+              </View>
+            ))}
+          </View>
+        )}
+        {show.overview && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Overview</Text>
+            <Text style={styles.overview}>{show.overview}</Text>
+          </View>
+        )}
+        {show.directorName && show.directorName !== "Unknown Director" && (
+          <View style={styles.section}>
+            <View style={styles.directorRow}>
+              <Ionicons name="videocam-outline" size={16} color="#9ca3af" />
+              <Text style={[styles.sectionTitle, { lineHeight: 16 }]}>
+                Director
               </Text>
             </View>
-          ) : (
-            <View style={styles.metaRow}>
-              <Ionicons name="chatbubble-outline" size={13} color="#555" />
-              <Text style={[styles.meta, { color: "#555" }]}>
-                {" "}
-                No reviews yet
-              </Text>
-            </View>
-          )
-        ) : null}
-        {show.status && (
-          <View style={styles.metaRow}>
-            <Ionicons
-              name="information-circle-outline"
-              size={13}
-              color="#9ca3af"
+            <Text style={styles.directorName}>{show.directorName}</Text>
+          </View>
+        )}
+        {show.topCast && show.topCast.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Cast</Text>
+            <FlatList
+              data={show.topCast}
+              keyExtractor={(item, index) => `cast-${index}`}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              renderItem={({ item }) => (
+                <View style={styles.castCard}>
+                  {item.profile_path ? (
+                    <Image
+                      source={{ uri: item.profile_path }}
+                      style={styles.castImage}
+                      contentFit="cover"
+                      transition={200}
+                      cachePolicy="memory-disk"
+                    />
+                  ) : (
+                    <View style={styles.castImagePlaceholder}>
+                      <Ionicons name="person-outline" size={28} color="#333" />
+                    </View>
+                  )}
+                  <Text style={styles.castName} numberOfLines={2}>
+                    {item.name}
+                  </Text>
+                  {item.roles && item.roles.length > 0 && (
+                    <Text style={styles.castCharacter} numberOfLines={2}>
+                      {item.roles[0].character}
+                    </Text>
+                  )}
+                </View>
+              )}
             />
-            <Text style={styles.status}> {show.status}</Text>
+          </View>
+        )}
+        {show.similarShows && show.similarShows.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Similar Shows</Text>
+            <FlatList
+              data={show.similarShows}
+              keyExtractor={(item) => `similar-${item.tmdbId}`}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              renderItem={({ item }) => <MediaCard item={item} />}
+            />
+          </View>
+        )}
+        {show.recommendations && show.recommendations.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Recommended</Text>
+            <FlatList
+              data={show.recommendations}
+              keyExtractor={(item) => `rec-${item.tmdbId}`}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              renderItem={({ item }) => <MediaCard item={item} />}
+            />
           </View>
         )}
       </View>
     </View>
-
-    <View style={styles.content}>
-      {show.genres && show.genres.length > 0 && (
-        <View style={styles.genreRow}>
-          {show.genres.map((genre, index) => (
-            <View key={index} style={styles.genreChip}>
-              <Text style={styles.genreText}>{genre}</Text>
-            </View>
-          ))}
-        </View>
-      )}
-      {show.overview && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Overview</Text>
-          <Text style={styles.overview}>{show.overview}</Text>
-        </View>
-      )}
-      {show.directorName && show.directorName !== "Unknown Director" && (
-        <View style={styles.section}>
-          <View style={styles.directorRow}>
-            <Ionicons name="videocam-outline" size={16} color="#9ca3af" />
-            <Text style={[styles.sectionTitle, { lineHeight: 16 }]}>
-              Director
-            </Text>
-          </View>
-          <Text style={styles.directorName}>{show.directorName}</Text>
-        </View>
-      )}
-      {show.topCast && show.topCast.length > 0 && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Cast</Text>
-          <FlatList
-            data={show.topCast}
-            keyExtractor={(item, index) => `cast-${index}`}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            renderItem={({ item }) => (
-              <View style={styles.castCard}>
-                {item.profile_path ? (
-                  <Image
-                    source={{ uri: item.profile_path }}
-                    style={styles.castImage}
-                    contentFit="cover"
-                    transition={200}
-                    cachePolicy="memory-disk"
-                  />
-                ) : (
-                  <View style={styles.castImagePlaceholder}>
-                    <Ionicons name="person-outline" size={28} color="#333" />
-                  </View>
-                )}
-                <Text style={styles.castName} numberOfLines={2}>
-                  {item.name}
-                </Text>
-                {item.roles && item.roles.length > 0 && (
-                  <Text style={styles.castCharacter} numberOfLines={2}>
-                    {item.roles[0].character}
-                  </Text>
-                )}
-              </View>
-            )}
-          />
-        </View>
-      )}
-      {show.similarShows && show.similarShows.length > 0 && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Similar Shows</Text>
-          <FlatList
-            data={show.similarShows}
-            keyExtractor={(item) => `similar-${item.tmdbId}`}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            renderItem={({ item }) => <MediaCard item={item} />}
-          />
-        </View>
-      )}
-      {show.recommendations && show.recommendations.length > 0 && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Recommended</Text>
-          <FlatList
-            data={show.recommendations}
-            keyExtractor={(item) => `rec-${item.tmdbId}`}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            renderItem={({ item }) => <MediaCard item={item} />}
-          />
-        </View>
-      )}
-    </View>
-  </View>
-));
+  ),
+);
 
 // ── Review section ─────────────────────────────────────────────────────────────
 const ReviewSection = memo(
@@ -407,6 +429,7 @@ export default function TvDetail() {
   const [reviewPage, setReviewPage] = useState(1);
   const [reviewTotalPages, setReviewTotalPages] = useState(1);
   const [loadingMoreReviews, setLoadingMoreReviews] = useState(false);
+  const [inLibrary, setInLibrary] = useState(false);
 
   const backButtonOpacity = useRef(new Animated.Value(0)).current;
   const isLoadingMoreReviews = useRef(false);
@@ -430,6 +453,11 @@ export default function TvDetail() {
     try {
       const { data } = await getTvDetails(id);
       setShow(data);
+      const { data: libraryStatus } = await checkLibrary(
+        data.tmdbId,
+        data.mediaType,
+      );
+      setInLibrary(libraryStatus);
     } catch (e) {
       console.log("TV detail error:", e);
       setError("Failed to load TV show details.");
@@ -515,6 +543,25 @@ export default function TvDetail() {
     }
   };
 
+  const toggleLibrary = async () => {
+    try {
+      if (inLibrary) {
+        await removeFromLibrary(show.tmdbId, show.mediaType);
+        setInLibrary(false);
+      } else {
+        await addToLibrary(
+          show.tmdbId,
+          show.mediaType,
+          show.title,
+          show.posterPath,
+        );
+        setInLibrary(true);
+      }
+    } catch (e) {
+      console.log("Library error:", e);
+    }
+  };
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -567,7 +614,12 @@ export default function TvDetail() {
           }}
           scrollEventThrottle={400}
         >
-          <TvStaticContent show={show} summary={summary} />
+          <TvStaticContent
+            show={show}
+            summary={summary}
+            inLibrary={inLibrary}
+            onToggleLibrary={toggleLibrary}
+          />
           <ReviewSection
             summary={summary}
             userReview={userReview}

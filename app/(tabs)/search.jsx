@@ -170,7 +170,6 @@ export default function Search() {
         activeOpacity={1}
         onPress={() => inputRef.current?.focus()}
       >
-        <Text style={searchStyles.searchIcon}>🔍</Text>
         <TextInput
           ref={inputRef}
           value={query}

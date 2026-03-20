@@ -22,6 +22,9 @@ import {
   addReview,
   editReview,
   deleteReview,
+  addToLibrary,
+  removeFromLibrary,
+  checkLibrary,
 } from "../../src/api/api";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
@@ -55,192 +58,211 @@ const SENTIMENT_CONFIG = {
 };
 
 // ── Static content ─────────────────────────────────────────────────────────────
-const MovieStaticContent = memo(({ movie, summary }) => (
-  <View>
-    <View style={styles.backdropContainer}>
-      {movie.backdropPath ? (
-        <Image
-          source={{ uri: movie.backdropPath }}
-          style={styles.backdrop}
-          contentFit="cover"
-          transition={300}
-          cachePolicy="memory-disk"
+const MovieStaticContent = memo(
+  ({ movie, summary, inLibrary, onToggleLibrary }) => (
+    <View>
+      <View style={styles.backdropContainer}>
+        {movie.backdropPath ? (
+          <Image
+            source={{ uri: movie.backdropPath }}
+            style={styles.backdrop}
+            contentFit="cover"
+            transition={300}
+            cachePolicy="memory-disk"
+          />
+        ) : (
+          <View style={styles.backdropPlaceholder}>
+            <Ionicons name="film-outline" size={48} color="#333" />
+          </View>
+        )}
+        <LinearGradient
+          colors={["transparent", "rgba(15,15,15,0.8)", "#0f0f0f"]}
+          style={styles.backdropGradient}
         />
-      ) : (
-        <View style={styles.backdropPlaceholder}>
-          <Ionicons name="film-outline" size={48} color="#333" />
-        </View>
-      )}
-      <LinearGradient
-        colors={["transparent", "rgba(15,15,15,0.8)", "#0f0f0f"]}
-        style={styles.backdropGradient}
-      />
-    </View>
+      </View>
 
-    <View style={styles.infoRow}>
-      {movie.posterPath ? (
-        <Image
-          source={{ uri: movie.posterPath }}
-          style={styles.poster}
-          contentFit="cover"
-          transition={300}
-          cachePolicy="memory-disk"
-        />
-      ) : (
-        <View style={styles.posterPlaceholder}>
-          <Ionicons name="film-outline" size={36} color="#333" />
-        </View>
-      )}
-      <View style={styles.infoText}>
-        <Text style={styles.title}>{movie.title}</Text>
-        {movie.releaseDate && (
-          <View style={styles.metaRow}>
-            <Ionicons name="calendar-outline" size={13} color="#9ca3af" />
-            <Text style={styles.meta}>
-              {" "}
-              {movie.releaseDate.substring(0, 4)}
-            </Text>
+      <View style={styles.infoRow}>
+        {movie.posterPath ? (
+          <Image
+            source={{ uri: movie.posterPath }}
+            style={styles.poster}
+            contentFit="cover"
+            transition={300}
+            cachePolicy="memory-disk"
+          />
+        ) : (
+          <View style={styles.posterPlaceholder}>
+            <Ionicons name="film-outline" size={36} color="#333" />
           </View>
         )}
-        {movie.tmdbRating && (
-          <View style={styles.metaRow}>
-            <Ionicons name="star" size={13} color="#fbbf24" />
-            <Text style={styles.rating}> {movie.tmdbRating.toFixed(1)}</Text>
+        <View style={styles.infoText}>
+          {/* Title + bookmark */}
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "flex-start",
+            }}
+          >
+            <Text style={[styles.title, { flex: 1 }]}>{movie.title}</Text>
+            <TouchableOpacity onPress={onToggleLibrary} style={{ padding: 4 }}>
+              <Ionicons
+                name={inLibrary ? "bookmark" : "bookmark-outline"}
+                size={24}
+                color={inLibrary ? "#E50914" : "#9ca3af"}
+              />
+            </TouchableOpacity>
           </View>
-        )}
-        {summary ? (
-          summary.sentiment ? (
+
+          {movie.releaseDate && (
+            <View style={styles.metaRow}>
+              <Ionicons name="calendar-outline" size={13} color="#9ca3af" />
+              <Text style={styles.meta}>
+                {" "}
+                {movie.releaseDate.substring(0, 4)}
+              </Text>
+            </View>
+          )}
+          {movie.tmdbRating && (
+            <View style={styles.metaRow}>
+              <Ionicons name="star" size={13} color="#fbbf24" />
+              <Text style={styles.rating}> {movie.tmdbRating.toFixed(1)}</Text>
+            </View>
+          )}
+          {summary ? (
+            summary.sentiment ? (
+              <View style={styles.metaRow}>
+                <Ionicons
+                  name={SENTIMENT_CONFIG[summary.sentiment].icon}
+                  size={13}
+                  color={SENTIMENT_CONFIG[summary.sentiment].color}
+                />
+                <Text
+                  style={[
+                    styles.meta,
+                    { color: SENTIMENT_CONFIG[summary.sentiment].color },
+                  ]}
+                >
+                  {" "}
+                  {SENTIMENT_CONFIG[summary.sentiment].label}
+                </Text>
+              </View>
+            ) : (
+              <View style={styles.metaRow}>
+                <Ionicons name="chatbubble-outline" size={13} color="#555" />
+                <Text style={[styles.meta, { color: "#555" }]}>
+                  {" "}
+                  No reviews yet
+                </Text>
+              </View>
+            )
+          ) : null}
+          {movie.status && (
             <View style={styles.metaRow}>
               <Ionicons
-                name={SENTIMENT_CONFIG[summary.sentiment].icon}
+                name="information-circle-outline"
                 size={13}
-                color={SENTIMENT_CONFIG[summary.sentiment].color}
+                color="#9ca3af"
               />
-              <Text
-                style={[
-                  styles.meta,
-                  { color: SENTIMENT_CONFIG[summary.sentiment].color },
-                ]}
-              >
-                {" "}
-                {SENTIMENT_CONFIG[summary.sentiment].label}
+              <Text style={styles.status}> {movie.status}</Text>
+            </View>
+          )}
+        </View>
+      </View>
+
+      <View style={styles.content}>
+        {movie.genres && movie.genres.length > 0 && (
+          <View style={styles.genreRow}>
+            {movie.genres.map((genre, index) => (
+              <View key={index} style={styles.genreChip}>
+                <Text style={styles.genreText}>{genre}</Text>
+              </View>
+            ))}
+          </View>
+        )}
+        {movie.overview && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Overview</Text>
+            <Text style={styles.overview}>{movie.overview}</Text>
+          </View>
+        )}
+        {movie.directorName && movie.directorName !== "Unknown Director" && (
+          <View style={styles.section}>
+            <View style={styles.directorRow}>
+              <Ionicons name="videocam-outline" size={16} color="#9ca3af" />
+              <Text style={[styles.sectionTitle, { lineHeight: 16 }]}>
+                Director
               </Text>
             </View>
-          ) : (
-            <View style={styles.metaRow}>
-              <Ionicons name="chatbubble-outline" size={13} color="#555" />
-              <Text style={[styles.meta, { color: "#555" }]}>
-                {" "}
-                No reviews yet
-              </Text>
-            </View>
-          )
-        ) : null}
-        {movie.status && (
-          <View style={styles.metaRow}>
-            <Ionicons
-              name="information-circle-outline"
-              size={13}
-              color="#9ca3af"
+            <Text style={styles.directorName}>{movie.directorName}</Text>
+          </View>
+        )}
+        {movie.topCast && movie.topCast.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Cast</Text>
+            <FlatList
+              data={movie.topCast}
+              keyExtractor={(item, index) => `cast-${index}`}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              renderItem={({ item }) => (
+                <View style={styles.castCard}>
+                  {item.profile_path ? (
+                    <Image
+                      source={{ uri: item.profile_path }}
+                      style={styles.castImage}
+                      contentFit="cover"
+                      transition={200}
+                      cachePolicy="memory-disk"
+                    />
+                  ) : (
+                    <View style={styles.castImagePlaceholder}>
+                      <Ionicons name="person-outline" size={28} color="#333" />
+                    </View>
+                  )}
+                  <Text style={styles.castName} numberOfLines={2}>
+                    {item.name}
+                  </Text>
+                  {item.character && (
+                    <Text style={styles.castCharacter} numberOfLines={2}>
+                      {item.character}
+                    </Text>
+                  )}
+                </View>
+              )}
             />
-            <Text style={styles.status}> {movie.status}</Text>
+          </View>
+        )}
+        {movie.similarMovies && movie.similarMovies.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Similar Movies</Text>
+            <FlatList
+              data={movie.similarMovies}
+              keyExtractor={(item) => `similar-${item.tmdbId}`}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              renderItem={({ item }) => <MediaCard item={item} />}
+            />
+          </View>
+        )}
+        {movie.recommendedMovies && movie.recommendedMovies.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Recommended</Text>
+            <FlatList
+              data={movie.recommendedMovies}
+              keyExtractor={(item) => `rec-${item.tmdbId}`}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              renderItem={({ item }) => <MediaCard item={item} />}
+            />
           </View>
         )}
       </View>
     </View>
+  ),
+);
 
-    <View style={styles.content}>
-      {movie.genres && movie.genres.length > 0 && (
-        <View style={styles.genreRow}>
-          {movie.genres.map((genre, index) => (
-            <View key={index} style={styles.genreChip}>
-              <Text style={styles.genreText}>{genre}</Text>
-            </View>
-          ))}
-        </View>
-      )}
-      {movie.overview && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Overview</Text>
-          <Text style={styles.overview}>{movie.overview}</Text>
-        </View>
-      )}
-      {movie.directorName && movie.directorName !== "Unknown Director" && (
-        <View style={styles.section}>
-          <View style={styles.directorRow}>
-            <Ionicons name="videocam-outline" size={16} color="#9ca3af" />
-            <Text style={[styles.sectionTitle, { lineHeight: 16 }]}>
-              Director
-            </Text>
-          </View>
-          <Text style={styles.directorName}>{movie.directorName}</Text>
-        </View>
-      )}
-      {movie.topCast && movie.topCast.length > 0 && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Cast</Text>
-          <FlatList
-            data={movie.topCast}
-            keyExtractor={(item, index) => `cast-${index}`}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            renderItem={({ item }) => (
-              <View style={styles.castCard}>
-                {item.profile_path ? (
-                  <Image
-                    source={{ uri: item.profile_path }}
-                    style={styles.castImage}
-                    contentFit="cover"
-                    transition={200}
-                    cachePolicy="memory-disk"
-                  />
-                ) : (
-                  <View style={styles.castImagePlaceholder}>
-                    <Ionicons name="person-outline" size={28} color="#333" />
-                  </View>
-                )}
-                <Text style={styles.castName} numberOfLines={2}>
-                  {item.name}
-                </Text>
-                {item.character && (
-                  <Text style={styles.castCharacter} numberOfLines={2}>
-                    {item.character}
-                  </Text>
-                )}
-              </View>
-            )}
-          />
-        </View>
-      )}
-      {movie.similarMovies && movie.similarMovies.length > 0 && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Similar Movies</Text>
-          <FlatList
-            data={movie.similarMovies}
-            keyExtractor={(item) => `similar-${item.tmdbId}`}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            renderItem={({ item }) => <MediaCard item={item} />}
-          />
-        </View>
-      )}
-      {movie.recommendedMovies && movie.recommendedMovies.length > 0 && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Recommended</Text>
-          <FlatList
-            data={movie.recommendedMovies}
-            keyExtractor={(item) => `rec-${item.tmdbId}`}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            renderItem={({ item }) => <MediaCard item={item} />}
-          />
-        </View>
-      )}
-    </View>
-  </View>
-));
-
-// ── Review section — owns text and liked state ─────────────────────────────────
+// ── Review section ─────────────────────────────────────────────────────────────
 const ReviewSection = memo(
   ({
     summary,
@@ -386,6 +408,7 @@ export default function MovieDetail() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
+
   const [movie, setMovie] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -396,6 +419,7 @@ export default function MovieDetail() {
   const [reviewPage, setReviewPage] = useState(1);
   const [reviewTotalPages, setReviewTotalPages] = useState(1);
   const [loadingMoreReviews, setLoadingMoreReviews] = useState(false);
+  const [inLibrary, setInLibrary] = useState(false);
 
   const backButtonOpacity = useRef(new Animated.Value(0)).current;
   const isLoadingMoreReviews = useRef(false);
@@ -419,6 +443,11 @@ export default function MovieDetail() {
     try {
       const { data } = await getMovieDetails(id);
       setMovie(data);
+      const { data: libraryStatus } = await checkLibrary(
+        data.tmdbId,
+        data.mediaType,
+      );
+      setInLibrary(libraryStatus);
     } catch (e) {
       console.log("Movie detail error:", e);
       setError("Failed to load movie details.");
@@ -471,7 +500,6 @@ export default function MovieDetail() {
       if (userReview) {
         await editReview(movie.tmdbId, movie.mediaType, liked, reviewText);
         setUserReview({ ...userReview, liked, content: reviewText });
-        // update the review in the list too
         setReviews((prev) =>
           prev.map((r) =>
             r.username === user ? { ...r, liked, content: reviewText } : r,
@@ -486,7 +514,6 @@ export default function MovieDetail() {
           createdAt: new Date().toISOString(),
         };
         setUserReview(newReview);
-        // add to top of reviews list
         setReviews((prev) => [newReview, ...prev]);
       }
       const { data } = await getReviewSummary(movie.tmdbId, movie.mediaType);
@@ -502,12 +529,30 @@ export default function MovieDetail() {
     try {
       await deleteReview(movie.tmdbId, movie.mediaType);
       setUserReview(null);
-      // remove from reviews list
       setReviews((prev) => prev.filter((r) => r.username !== user));
       const { data } = await getReviewSummary(movie.tmdbId, movie.mediaType);
       setSummary(data);
     } catch (e) {
       console.log("Delete review error:", e);
+    }
+  };
+
+  const toggleLibrary = async () => {
+    try {
+      if (inLibrary) {
+        await removeFromLibrary(movie.tmdbId, movie.mediaType);
+        setInLibrary(false);
+      } else {
+        await addToLibrary(
+          movie.tmdbId,
+          movie.mediaType,
+          movie.title,
+          movie.posterPath,
+        );
+        setInLibrary(true);
+      }
+    } catch (e) {
+      console.log("Library error:", e);
     }
   };
 
@@ -563,7 +608,12 @@ export default function MovieDetail() {
           }}
           scrollEventThrottle={400}
         >
-          <MovieStaticContent movie={movie} summary={summary} />
+          <MovieStaticContent
+            movie={movie}
+            summary={summary}
+            inLibrary={inLibrary}
+            onToggleLibrary={toggleLibrary}
+          />
           <ReviewSection
             summary={summary}
             userReview={userReview}

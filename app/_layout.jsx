@@ -33,6 +33,7 @@ function RootLayoutNav() {
       <Stack.Screen name="(auth)" options={{ animation: "fade" }} />
       <Stack.Screen name="(tabs)" options={{ animation: "fade" }} />
       <Stack.Screen name="category/[type]" />
+      <Stack.Screen name="library/[type]" />
       <Stack.Screen name="movie/[id]" />
       <Stack.Screen name="tv/[id]" />
     </Stack>
