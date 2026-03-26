@@ -81,3 +81,13 @@ export const removeFromLibrary = async (tmdbId, mediaType) =>
 
 export const checkLibrary = async (tmdbId, mediaType) =>
   apiClient.get(`/api/library/check?tmdbId=${tmdbId}&mediaType=${mediaType}`);
+
+export const getUserStats = async () => apiClient.get("/api/users/stats");
+
+export const getMe = async () => apiClient.get("/api/users/me");
+
+export const changePassword = async (currentPassword, newPassword) =>
+  apiClient.post("/api/users/change-password", {
+    currentPassword,
+    newPassword,
+  });

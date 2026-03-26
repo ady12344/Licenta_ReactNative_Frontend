@@ -23,7 +23,6 @@ import { useRouter } from "expo-router";
 
 export default function Home() {
   const router = useRouter();
-  const { logout } = useAuth();
   const hasFetched = useRef(false);
   const [refreshing, setRefreshing] = useState(false);
   const [movies, setMovies] = useState({
@@ -101,18 +100,6 @@ export default function Home() {
 
   return (
     <SafeAreaView style={homeStyles.safeArea}>
-      <TouchableOpacity
-        onPress={logout}
-        style={{
-          padding: 16,
-          backgroundColor: "#E50914",
-          margin: 16,
-          borderRadius: 8,
-        }}
-      >
-        <Text style={{ color: "white", textAlign: "center" }}>Logout</Text>
-      </TouchableOpacity>
-
       <ScrollView
         style={homeStyles.container}
         contentContainerStyle={homeStyles.scrollContent}
