@@ -1,6 +1,28 @@
 import { StyleSheet } from "react-native";
 
 export const movieStyles = StyleSheet.create({
+  providerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    gap: 12,
+  },
+  providerLabel: {
+    color: '#9ca3af',
+    fontSize: 13,
+    width: 50,
+  },
+  providerIcons: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  providerLogo: {
+    width: 40,
+    height: 40,
+    borderRadius: 8,
+    backgroundColor: '#1a1a2e',
+  },
   container: {
     flex: 1,
     backgroundColor: "#0f0f0f",

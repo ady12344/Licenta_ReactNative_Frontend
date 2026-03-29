@@ -91,3 +91,15 @@ export const changePassword = async (currentPassword, newPassword) =>
     currentPassword,
     newPassword,
   });
+
+export const getMovieWatchProviders = async (tmdbId, country = 'RO') =>
+    apiClient.get(`/api/movie/${tmdbId}/watch-providers?country=${country}`);
+
+export const getTvWatchProviders = async (tmdbId, country = 'RO') =>
+    apiClient.get(`/api/tv/${tmdbId}/watch-providers?country=${country}`);
+
+export const getTvSeason = async (tvId, seasonNumber) =>
+    apiClient.get(`/api/tv/${tvId}/season/${seasonNumber}`);
+
+export const getPersonDetails = async (id) =>
+    apiClient.get(`/api/person/${id}`);
