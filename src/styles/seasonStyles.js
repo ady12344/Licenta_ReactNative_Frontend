@@ -28,6 +28,17 @@ export const seasonStyles = StyleSheet.create({
         fontSize: 12,
         marginTop: 2,
     },
+    seasonOverviewBox: {
+        paddingHorizontal: 14,
+        paddingBottom: 10,
+        borderBottomWidth: 1,
+        borderBottomColor: 'rgba(255,255,255,0.06)',
+    },
+    seasonOverview: {
+        color: '#9ca3af',
+        fontSize: 12,
+        lineHeight: 18,
+    },
     episodesList: {
         borderTopWidth: 1,
         borderTopColor: 'rgba(255,255,255,0.06)',

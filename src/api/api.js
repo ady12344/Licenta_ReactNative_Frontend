@@ -103,3 +103,9 @@ export const getTvSeason = async (tvId, seasonNumber) =>
 
 export const getPersonDetails = async (id) =>
     apiClient.get(`/api/person/${id}`);
+
+export const forgotPassword = async (email) =>
+    apiClient.post('/api/users/forgot-password', { email });
+
+export const resetPassword = async (email, code, newPassword) =>
+    apiClient.post('/api/users/reset-password', { email, code, newPassword });

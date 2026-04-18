@@ -6,16 +6,24 @@ import {
   Dimensions,
 } from "react-native";
 import { Image } from "expo-image";
-import { useRouter } from "expo-router";
+import { useRouter, usePathname } from 'expo-router';
 import { memo } from "react";
 import { CARD_WIDTH } from "../styles/homeStyles";
 
 const SearchMediaCard = memo(({ item }) => {
   const router = useRouter();
+  const pathname = usePathname();
   const CARD_WIDTH = (Dimensions.get("window").width - 24) / 3;
   const handlePress = () => {
-    if (item.mediaType === "MOVIE") router.push(`/movie/${item.tmdbId}`);
-    else router.push(`/tv/${item.tmdbId}`);
+    const route = item.mediaType === 'MOVIE'
+        ? `/movie/${item.tmdbId}`
+        : `/tv/${item.tmdbId}`;
+
+    if (pathname.startsWith('/movie/') || pathname.startsWith('/tv/') || pathname.startsWith('/person/')) {
+      router.replace(route);
+    } else {
+      router.push(route);
+    }
   };
 
   return (

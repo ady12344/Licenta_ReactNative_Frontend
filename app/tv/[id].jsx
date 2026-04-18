@@ -395,13 +395,13 @@ const SeasonsSection = memo(({ show, seasons, expandedSeason, loadingSeason, onT
   const [showAllEpisodes, setShowAllEpisodes]   = useState({});
   const [showAllSeasons, setShowAllSeasons]     = useState(false);
 
-  if (!show.numberOfSeasons) return null;
+  if (!show.seasons || show.seasons.length === 0) return null;
 
   const EPISODES_LIMIT = 5;
   const SEASONS_LIMIT  = 3;
 
-  const seasonNumbers  = Array.from({ length: show.numberOfSeasons }, (_, i) => i + 1);
-  const visibleSeasons = showAllSeasons ? seasonNumbers : seasonNumbers.slice(0, SEASONS_LIMIT);
+  const allSeasons     = show.seasons;
+  const visibleSeasons = showAllSeasons ? allSeasons : allSeasons.slice(0, SEASONS_LIMIT);
 
   const toggleEpisode = (key) => {
     setExpandedEpisodes(prev => ({ ...prev, [key]: !prev[key] }));
@@ -415,16 +415,18 @@ const SeasonsSection = memo(({ show, seasons, expandedSeason, loadingSeason, onT
       <View style={styles.content}>
         <Text style={styles.sectionTitle}>Seasons</Text>
 
-        {visibleSeasons.map(num => {
+        {visibleSeasons.map(seasonInfo => {
+          const num        = seasonInfo.seasonNumber;
           const isExpanded = expandedSeason === num;
           const isLoading  = loadingSeason === num;
-          const season     = seasons[num];
+          const season     = seasons[num]; // loaded episode data
           const showAll    = showAllEpisodes[num];
           const episodes   = season?.episodes || [];
           const visibleEps = showAll ? episodes : episodes.slice(0, EPISODES_LIMIT);
 
           return (
               <View key={num} style={seasonStyles.seasonCard}>
+                {/* Season header */}
                 <TouchableOpacity
                     style={seasonStyles.seasonHeader}
                     onPress={() => onToggle(num)}
@@ -432,13 +434,11 @@ const SeasonsSection = memo(({ show, seasons, expandedSeason, loadingSeason, onT
                 >
                   <View style={seasonStyles.seasonInfo}>
                     <Text style={seasonStyles.seasonName}>
-                      {season?.name || `Season ${num}`}
+                      {seasonInfo.name}
                     </Text>
-                    {season?.episodeCount && (
-                        <Text style={seasonStyles.episodeCount}>
-                          {season.episodeCount} episodes
-                        </Text>
-                    )}
+                    <Text style={seasonStyles.episodeCount}>
+                      {seasonInfo.episodeCount} episodes
+                    </Text>
                   </View>
                   {isLoading ? (
                       <ActivityIndicator color="#E50914" size="small" />
@@ -451,6 +451,14 @@ const SeasonsSection = memo(({ show, seasons, expandedSeason, loadingSeason, onT
                   )}
                 </TouchableOpacity>
 
+                {/* Season overview */}
+                {isExpanded && seasonInfo.overview ? (
+                    <View style={seasonStyles.seasonOverviewBox}>
+                      <Text style={seasonStyles.seasonOverview}>{seasonInfo.overview}</Text>
+                    </View>
+                ) : null}
+
+                {/* Episodes list */}
                 {isExpanded && season?.episodes && (
                     <View style={seasonStyles.episodesList}>
                       {visibleEps.map((episode) => {
@@ -515,6 +523,7 @@ const SeasonsSection = memo(({ show, seasons, expandedSeason, loadingSeason, onT
                         );
                       })}
 
+                      {/* Show more/less episodes */}
                       {episodes.length > EPISODES_LIMIT && (
                           <TouchableOpacity
                               style={seasonStyles.showMoreButton}
@@ -538,7 +547,8 @@ const SeasonsSection = memo(({ show, seasons, expandedSeason, loadingSeason, onT
           );
         })}
 
-        {seasonNumbers.length > SEASONS_LIMIT && (
+        {/* Show more/less seasons */}
+        {allSeasons.length > SEASONS_LIMIT && (
             <TouchableOpacity
                 style={seasonStyles.showMoreButton}
                 onPress={() => setShowAllSeasons(prev => !prev)}
@@ -546,7 +556,7 @@ const SeasonsSection = memo(({ show, seasons, expandedSeason, loadingSeason, onT
               <Text style={seasonStyles.showMoreText}>
                 {showAllSeasons
                     ? 'Show Less'
-                    : `Show ${seasonNumbers.length - SEASONS_LIMIT} More Seasons`}
+                    : `Show ${allSeasons.length - SEASONS_LIMIT} More Seasons`}
               </Text>
               <Ionicons
                   name={showAllSeasons ? 'chevron-up' : 'chevron-down'}
@@ -558,7 +568,6 @@ const SeasonsSection = memo(({ show, seasons, expandedSeason, loadingSeason, onT
       </View>
   );
 });
-
 // ── Main component ─────────────────────────────────────────────────────────────
 export default function TvDetail() {
   const { id }   = useLocalSearchParams();

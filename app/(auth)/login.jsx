@@ -4,14 +4,13 @@ import {
     ScrollView, Platform, Animated, StyleSheet
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Link } from 'expo-router';
+import { Link , useRouter} from 'expo-router';
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../../src/context/AuthContext';
 import styles from '../../src/styles/authStyles';
-
 export default function LoginScreen() {
     const { login } = useAuth();
-
+    const router = useRouter();
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading]   = useState(false);
@@ -158,6 +157,13 @@ export default function LoginScreen() {
                                 />
                                 {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
                             </View>
+                            {/* Add this after the password input group */}
+                            <TouchableOpacity
+                                onPress={() => router.push('/(auth)/forgot-password')}
+                                style={{ alignItems: 'flex-end', marginBottom: 8 }}
+                            >
+                                <Text style={{ color: '#E50914', fontSize: 13 }}>Forgot Password?</Text>
+                            </TouchableOpacity>
 
                         </Animated.View>
 

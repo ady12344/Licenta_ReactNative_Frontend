@@ -140,7 +140,7 @@ export default function PersonDetail() {
                             <Text style={styles.sectionTitle}>Movies</Text>
                             <FlatList
                                 data={person.movieCredits}
-                                keyExtractor={(item) => `movie-${item.tmdbId}`}
+                                keyExtractor={(item, index) => `movie-${item.tmdbId}-${index}`}
                                 horizontal
                                 showsHorizontalScrollIndicator={false}
                                 renderItem={({ item }) => <MediaCard item={item} />}
@@ -154,7 +154,7 @@ export default function PersonDetail() {
                             <Text style={styles.sectionTitle}>TV Shows</Text>
                             <FlatList
                                 data={person.tvCredits}
-                                keyExtractor={(item) => `tv-${item.tmdbId}`}
+                                keyExtractor={(item, index) => `tv-${item.tmdbId}-${index}`}
                                 horizontal
                                 showsHorizontalScrollIndicator={false}
                                 renderItem={({ item }) => <MediaCard item={item} />}

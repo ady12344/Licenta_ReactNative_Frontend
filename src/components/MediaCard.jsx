@@ -1,15 +1,24 @@
 import { TouchableOpacity, Text } from "react-native";
-import { useRouter } from "expo-router";
 import { cardStyles } from "../styles/homeStyles";
 import { memo } from "react";
 import { Image } from "expo-image";
+import { useRouter, usePathname } from 'expo-router';
 
 const MediaCard = memo(({ item }) => {
   const router = useRouter();
+  const pathname = usePathname();
 
   const handlePress = () => {
-    if (item.mediaType === "MOVIE") router.push(`/movie/${item.tmdbId}`);
-    else router.push(`/tv/${item.tmdbId}`);
+    const route = item.mediaType === 'MOVIE'
+        ? `/movie/${item.tmdbId}`
+        : `/tv/${item.tmdbId}`;
+
+    // if already on a detail screen, replace instead of push
+    if (pathname.startsWith('/movie/') || pathname.startsWith('/tv/') || pathname.startsWith('/person/')) {
+      router.replace(route);
+    } else {
+      router.push(route);
+    }
   };
 
   return (
