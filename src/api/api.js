@@ -71,8 +71,8 @@ export const getLibrary = async (type = null, page = 1, size = 10) =>
     `/api/library?page=${page}&size=${size}${type ? `&type=${type}` : ""}`,
   );
 
-export const addToLibrary = async (tmdbId, mediaType, title, posterPath) =>
-  apiClient.post("/api/library/add", { tmdbId, mediaType, title, posterPath });
+export const addToLibrary = async (tmdbId, mediaType, title, posterPath, genres) =>
+    apiClient.post('/api/library/add', { tmdbId, mediaType, title, posterPath, genres });
 
 export const removeFromLibrary = async (tmdbId, mediaType) =>
   apiClient.delete(
@@ -109,3 +109,8 @@ export const forgotPassword = async (email) =>
 
 export const resetPassword = async (email, code, newPassword) =>
     apiClient.post('/api/users/reset-password', { email, code, newPassword });
+export const getAiSummary = async (tmdbId, mediaType) =>
+    apiClient.get(`/api/reviews/ai-summary?tmdbId=${tmdbId}&mediaType=${mediaType}`);
+
+export const getRecommendations = async (page = 1) =>
+    apiClient.get(`/api/recommendations?page=${page}`);

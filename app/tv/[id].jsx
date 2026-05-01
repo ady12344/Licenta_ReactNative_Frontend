@@ -11,7 +11,7 @@ import {
   getTvDetails, getReviews, getReviewSummary,
   getUserReview, addReview, editReview, deleteReview,
   addToLibrary, removeFromLibrary, checkLibrary,
-  getTvWatchProviders, getTvSeason
+  getTvWatchProviders, getTvSeason, getAiSummary
 } from '../../src/api/api';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -275,7 +275,8 @@ const TvStaticContent = memo(({ show, summary, inLibrary, onToggleLibrary, watch
 const ReviewSection = memo(({
                               summary, userReview, submitting,
                               reviews, onSubmit, onDelete,
-                              loadingMore, initialText, initialLiked
+                              loadingMore, initialText, initialLiked,
+                              aiSummary, loadingAiSummary
                             }) => {
   const [text, setText]   = useState(initialText || '');
   const [liked, setLiked] = useState(initialLiked ?? null);
@@ -289,6 +290,7 @@ const ReviewSection = memo(({
   }, [initialLiked]);
 
   return (
+
       <View style={styles.content}>
         <Text style={styles.sectionTitle}>Reviews</Text>
         {summary && (
@@ -296,6 +298,20 @@ const ReviewSection = memo(({
               {summary.totalReviews} reviews · {Math.round(summary.positivePercentage)}% positive
             </Text>
         )}
+        {loadingAiSummary ? (
+            <View style={styles.aiSummaryCard}>
+              <ActivityIndicator color="#E50914" size="small" />
+              <Text style={styles.aiSummaryLoading}>Generating AI summary...</Text>
+            </View>
+        ) : aiSummary ? (
+            <View style={styles.aiSummaryCard}>
+              <View style={styles.aiSummaryHeader}>
+                <Ionicons name="sparkles" size={16} color="#E50914" />
+                <Text style={styles.aiSummaryTitle}>AI Summary</Text>
+              </View>
+              <Text style={styles.aiSummaryText}>{aiSummary}</Text>
+            </View>
+        ) : null}
 
         {userReview && (
             <View style={styles.userReviewCard}>
@@ -590,7 +606,8 @@ export default function TvDetail() {
   const [seasons, setSeasons]                       = useState({});
   const [expandedSeason, setExpandedSeason]         = useState(null);
   const [loadingSeason, setLoadingSeason]           = useState(null);
-
+  const [aiSummary, setAiSummary]             = useState(null);
+  const [loadingAiSummary, setLoadingAiSummary] = useState(false);
   const backButtonOpacity    = useRef(new Animated.Value(0)).current;
   const isLoadingMoreReviews = useRef(false);
   const scrollRef            = useRef(null);
@@ -635,6 +652,19 @@ export default function TvDetail() {
       setUserReview(userReviewRes.data);
       setReviews(reviewsRes.data.results);
       setReviewTotalPages(reviewsRes.data.totalPages);
+
+      // load AI summary if enough reviews
+      if (summaryRes.data.totalReviews >= 3) {
+        setLoadingAiSummary(true);
+        try {
+          const { data: aiData } = await getAiSummary(show.tmdbId, show.mediaType);
+          setAiSummary(aiData.summary);
+        } catch (e) {
+          console.log('AI summary error:', e);
+        } finally {
+          setLoadingAiSummary(false);
+        }
+      }
     } catch (e) {
       console.log('Load reviews error:', e);
     }
@@ -705,7 +735,10 @@ export default function TvDetail() {
         await removeFromLibrary(show.tmdbId, show.mediaType);
         setInLibrary(false);
       } else {
-        await addToLibrary(show.tmdbId, show.mediaType, show.title, show.posterPath);
+        await addToLibrary(
+            show.tmdbId, show.mediaType, show.title, show.posterPath,
+            show.genreIds?.join(',') || ''
+        );
         setInLibrary(true);
       }
     } catch (e) {
@@ -797,6 +830,8 @@ export default function TvDetail() {
                 initialLiked={userReview?.liked ?? null}
                 onSubmit={submitReview}
                 onDelete={handleDeleteReview}
+                aiSummary={aiSummary}
+                loadingAiSummary={loadingAiSummary}
             />
           </ScrollView>
         </KeyboardAvoidingView>

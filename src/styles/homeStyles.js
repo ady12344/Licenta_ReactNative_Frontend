@@ -4,6 +4,13 @@ export const CARD_WIDTH = 110;
 export const CARD_HEIGHT = 165;
 
 export const homeStyles = StyleSheet.create({
+  pageTitle: {
+    color: 'white',
+    fontSize: 28,
+    fontWeight: 'bold',
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+  },
   safeArea: {
     flex: 1,
     backgroundColor: "#0f0f0f",

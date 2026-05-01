@@ -260,4 +260,33 @@ export const movieStyles = StyleSheet.create({
     fontWeight: "bold",
     fontSize: 14,
   },
+  aiSummaryCard: {
+    backgroundColor: 'rgba(229,9,20,0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(229,9,20,0.15)',
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 16,
+    gap: 8,
+  },
+  aiSummaryHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  aiSummaryTitle: {
+    color: '#E50914',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  aiSummaryText: {
+    color: '#d1d5db',
+    fontSize: 13,
+    lineHeight: 20,
+  },
+  aiSummaryLoading: {
+    color: '#9ca3af',
+    fontSize: 13,
+    textAlign: 'center',
+  },
 });
