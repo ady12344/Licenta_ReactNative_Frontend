@@ -1,6 +1,12 @@
 import { StyleSheet } from "react-native";
 
 export const profileStyles = StyleSheet.create({
+  sectionTitle: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "bold",
+    marginBottom: 12,
+  },
   changePasswordButton: {
     flexDirection: "row",
     alignItems: "center",
